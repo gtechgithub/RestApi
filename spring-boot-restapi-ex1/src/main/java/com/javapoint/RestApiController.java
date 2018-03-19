@@ -2,6 +2,8 @@ package com.javapoint;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.xml.ws.spi.http.HttpHandler;
 
@@ -10,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -110,8 +114,10 @@ public class RestApiController {
 		 
 		 int id = employee.getId();
 		 
+		 Employee emp = service.findById(id);
+		 
 		 //check already employee id present
-		 if(service.findById(id).getId() == id ) {
+		 if(emp!=  null && emp.getId() == id ) {
 			 String errorMessage= "employee already avaialble hence not inserted once agaion";
 			 return new ResponseEntity<CustomErrorType>(new CustomErrorType(errorMessage),HttpStatus.CONFLICT);
 		 }
@@ -124,5 +130,55 @@ public class RestApiController {
 			   return new ResponseEntity<String>(httpHeader,HttpStatus.OK);
 		 }
 	 }
+	 
+	//---------------- get all operations--------------------
+	 
+		 @RequestMapping(value = "/Employee",method=RequestMethod.OPTIONS)
+		 public ResponseEntity <?> getAllOperations(){
+
+			   HttpHeaders httpHeader =  new HttpHeaders();
+			   
+			   Set<HttpMethod> allowedMethods= new TreeSet <HttpMethod>();
+			   allowedMethods.add(HttpMethod.GET);
+			   allowedMethods.add(HttpMethod.PUT);
+			   allowedMethods.add(HttpMethod.DELETE);
+			   allowedMethods.add(HttpMethod.POST);
+
+			   httpHeader.setAllow(allowedMethods);
+			   httpHeader.setContentType(MediaType.APPLICATION_JSON);
+			   return new ResponseEntity<String>(httpHeader,HttpStatus.OK);
+			   
+			   
+			   /********************HEADERS***********
+			   allow →GET,POST,PUT,DELETE
+			   content-length →0
+			   content-type →application/json
+			   date →Mon, 19 Mar 2018 10:16:54 GMT
+				***************************/
+		 }
+
+		 
+		 @RequestMapping(value = "/Employee/{id}",method=RequestMethod.HEAD)
+		 public ResponseEntity <?> getHeadOperations(@PathVariable("id") int id){
+			 
+			 Employee emp = service.findById(id);
+			  if (emp == null) {
+				  return new ResponseEntity<String>("resource is not avaialble", HttpStatus.NOT_FOUND);
+			  }
+			 
+			 if (service.findById(id).getId() == id) {			 
+				 return new ResponseEntity<String>("resource is avaialble", HttpStatus.OK);
+			 }
+			 else {
+				 return new ResponseEntity<String>("resource is not avaialble", HttpStatus.NOT_FOUND);
+			 }
+			 
+			 /**********************
+			 content-length →21
+			 content-type →text/plain;charset=UTF-8
+			 date →Mon, 19 Mar 2018 10:35:55 GMT
+			 
+			 ****************/
+		 }
 
 }
